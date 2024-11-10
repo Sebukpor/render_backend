@@ -13,8 +13,8 @@ app = Flask(__name__)
 # Load the Xception model
 model = load_model('./model.h5')
 
-# Define Grad-CAM function for Xception
-def grad_cam(input_image, model, layer_name="block14_sepconv2_act"):
+# Define Grad-CAM function for ResNet50
+def grad_cam(input_image, model, layer_name="conv5_block3_out"):
     """
     Apply Grad-CAM on the given input image for the Xception model.
     
