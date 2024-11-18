@@ -1,0 +1,6 @@
+AZURE_COMPUTER_VISION_KEY=your_computer_vision_api_key
+AZURE_COMPUTER_VISION_ENDPOINT=https://your_computer_vision_endpoint.cognitiveservices.azure.com/
+
+AZURE_OPENAI_KEY=your_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your_openai_endpoint.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT_ID=your_model_deployment_id
