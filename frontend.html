@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Analysis with TensorFlow.js and Azure</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body>
+    <h1>Analyze Medical Image</h1>
+    <p>Upload an image for analysis:</p>
+    
+    <!-- File upload -->
+    <input type="file" id="imageUpload" accept="image/*">
+    <button id="analyzeButton">Analyze</button>
+
+    <!-- Results -->
+    <h2>TensorFlow.js Prediction:</h2>
+    <p id="tfPrediction">No prediction yet.</p>
+
+    <h2>Image Description:</h2>
+    <p id="imageDescription">No description yet.</p>
+
+    <h2>Findings and Impressions:</h2>
+    <p id="findings">No findings yet.</p>
+
+    <!-- JavaScript -->
+    <script>
+        // Load TensorFlow.js Model
+        let model;
+        (async () => {
+            model = await tf.loadLayersModel('path/to/your/tfjs/model.json'); // Replace with your model's path
+            console.log('Model loaded successfully');
+        })();
+
+        document.getElementById('analyzeButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('imageUpload');
+            if (!fileInput.files.length) {
+                alert('Please upload an image first!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+
+            img.onload = async () => {
+                // Preprocess the image for TensorFlow.js
+                const tensor = tf.browser.fromPixels(img)
+                    .resizeNearestNeighbor([224, 224]) // Resize to model input size
+                    .toFloat()
+                    .div(255.0) // Normalize pixel values
+                    .expandDims();
+
+                // Perform prediction
+                const predictions = await model.predict(tensor).data();
+                const maxIndex = predictions.indexOf(Math.max(...predictions));
+                const labels = ['Normal', 'Pneumonia']; // Replace with your model's labels
+                const tfPrediction = `Prediction: ${labels[maxIndex]} (Confidence: ${(predictions[maxIndex] * 100).toFixed(2)}%)`;
+                document.getElementById('tfPrediction').textContent = tfPrediction;
+
+                // Prepare data to send to backend
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('tfPrediction', tfPrediction);
+
+                // Send image and prediction to backend
+                try {
+                    const response = await fetch('http://localhost:5000/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Failed to analyze the image.');
+
+                    const result = await response.json();
+                    document.getElementById('imageDescription').textContent = result.description;
+                    document.getElementById('findings').textContent = result.findings;
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Error analyzing image. Please try again.');
+                }
+            };
+        });
+    </script>
+</body>
+</html>
