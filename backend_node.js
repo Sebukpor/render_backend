@@ -26,7 +26,7 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
             messages: [
                 {
                     role: 'system',
-                    content: "You are a radiologist assistant. Combine the TensorFlow.js prediction with the image description and provide findings."
+                    content: "You are a radiologist assistant. Combine the TensorFlow.js prediction with the image description and provide findings and impressions."
                 },
                 {
                     role: 'user',
