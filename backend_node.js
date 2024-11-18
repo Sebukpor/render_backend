@@ -1,3 +1,29 @@
+require('dotenv').config(); // Load environment variables
+const express = require('express');
+const multer = require('multer');
+const { ComputerVisionClient } = require('@azure/cognitiveservices-computervision');
+const { CognitiveServicesCredentials } = require('@azure/ms-rest-azure-js');
+const { OpenAIClient, AzureKeyCredential } = require('@azure/openai');
+
+const app = express();
+const upload = multer();
+
+// Azure Computer Vision setup
+const computerVisionKey = process.env.AZURE_COMPUTER_VISION_KEY;
+const computerVisionEndpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT;
+const computerVisionClient = new ComputerVisionClient(
+    new CognitiveServicesCredentials(computerVisionKey),
+    computerVisionEndpoint
+);
+
+// Azure OpenAI setup
+const openAiKey = process.env.AZURE_OPENAI_KEY;
+const openAiEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
+const deploymentId = process.env.AZURE_OPENAI_DEPLOYMENT_ID;
+const openai = new OpenAIClient(openAiEndpoint, new AzureKeyCredential(openAiKey));
+const OPENAI_MODEL = deploymentId;
+
+// Analyze route
 app.post('/analyze', upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
@@ -21,7 +47,7 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
         `;
 
         // Step 3: Generate findings with Azure OpenAI (ChatGPT)
-        const openaiResponse = await openai.ChatCompletion.create({
+        const openaiResponse = await openai.chatCompletions.create({
             model: OPENAI_MODEL,
             messages: [
                 {
@@ -48,3 +74,7 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
         res.status(500).send({ error: 'Error processing the request.' });
     }
 });
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
